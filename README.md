@@ -9,9 +9,9 @@ You basically need to write your hydrus project directory to Level_01.dir file a
 ### Example1:
 import pandas as pd
 
-import get_hydrus as gh # MY HYDRUS IMPORT FUNCTIONS
+import get_hydrus as gh # this is the script with the Class that runs hydrus
 
-import hydrus_in_out_functions as hh # MY HYDRUS CHANGE DATA FUNCTIONS
+import hydrus_in_out_functions as hh # hydrus change-model input and configurations functions
 
 calc_path = '/home/theodor/Documents/hyd_calc01' # path to calc.exe file
 run_path = '/home/theodor/Documents/hydrus/WRF_RAIN01' # path to hydrus project folder
