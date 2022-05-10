@@ -18,6 +18,7 @@ run_path = '/home/theodor/Documents/hydrus/WRF_RAIN01' # path to hydrus project 
 
 ### run hydrus
 hyd = gh.hydrus_handler(run_path, exe_folder=calc_path)
+
 hyd.run_hydrus()
 
 ### If you want to change parameters and input data the hydrus_in_out_functions.py has a lot of functions
