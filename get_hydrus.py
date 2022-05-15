@@ -19,7 +19,7 @@ class hydrus_handler:
     def __init__(self, run_path, exe_folder='default', change_dir=True, suppress_printing=True):
         self.run_path = run_path
         if exe_folder == 'default':
-            self.exe_folder = '/home/theodor/Documents/hydrus/'
+            self.exe_folder = 'C:/Program Files (x86)/PC-Progress/Hydrus-1D 4.xx/'
         else:
             self.exe_folder = exe_folder
         self.change_dir = change_dir
@@ -35,45 +35,14 @@ class hydrus_handler:
         #         f.write(run_path)
 
         # elif self.exe_folder != 'default' and self.change_dir:
-        with open('{}/LEVEL_01.DIR'.format(self.exe_folder),'w') as f:
+        with open('{}LEVEL_01.DIR'.format(self.exe_folder),'w') as f:
             f.write(run_path)
-        # else:
-        #     pass
+       
 
-#        for (path,dirs,files) in os.walk(run_path): # this is sometimes needed and sometimes not. dependent on hydrus1D, I guess
-#            for fi in files:
-#                if fi=='PROFILE.DAT':
-#                    os.rename(os.path.join(run_path,fi),os.path.join(run_path,'Profile.dat'))
-#                elif fi=='HYDRUS1D.DAT':
-#                    os.rename(os.path.join(run_path,fi),os.path.join(run_path,'Hydrus1d.dat'))
-#                elif fi=='SELECTOR.IN':
-#                    os.rename(os.path.join(run_path,fi),os.path.join(run_path,'Selector.in'))
-#                else:
-#                    pass
-#        tic = time.time()
-
-        #### added >/dev/null 2>&1 & for supressing the printing of the run1
-        # if self.exe_folder == 'default':
-        #     # cmd = os.system("cd  /home/theodor/Documents/hydrus ;wine H1D_CALC.EXE  >/dev/null 2>&1 &")
-        #     cmd = "cd  /home/theodor/Documents/hydrus ;wine H1D_CALC.EXE"
-        # else:
-        #     # cmd = os.system("cd  {} ;wine H1D_CALC.EXE  >/dev/null 2>&1 &".format(self.exe_folder))
-        cmd = "cd  {} ;wine H1D_CALC.EXE".format(self.exe_folder)
-        # os.system("cd '/home/theodor/hydrus/build';./h1d_calc") # for compiled fortran codes
-#        toc = time.time()
-#        os.system("echo 'HYDRUS SIMULATION IS DONE (in {} [sec])'".format((toc-tic)))
-  # EXECUTE AND WAIT
-        
-          
-        if self.suppress_printing:
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-            (output, err) = p.communicate()
-            #This makes the wait possible
-            p_status = p.wait()
-        else:
-            os.system("cd  {} ;wine H1D_CALC.EXE".format(self.exe_folder))
-        
+        os.chdir("{}".format(self.exe_folder))
+        os.startfile("H1D_CALC.EXE")        
         return  
+
 
     def  get_hydrus_dat(self):
         '''
@@ -222,8 +191,8 @@ class hydrus_handler:
             for i, line in enumerate(f):
                 text[i] = line.split()
         # text
-        mypars = text[6] # parameters for column names  of dataframe
-        start_row  = 8
+        mypars = text[7] # parameters for column names  of dataframe
+        start_row  = 9
         end_row   = [val[0] for val in text.items() if 'end' in val[1]][0]
         dfarray = np.empty(shape=(end_row - start_row, len(mypars)))
         lines = list(range(start_row, end_row))
@@ -265,3 +234,14 @@ class hydrus_handler:
             dfarray[i,:] = [float(k) for k in textpd[line][:num_pars] ]
         df = pd.DataFrame(data=dfarray, columns=mypars[:num_pars])
         return df, textpd
+    
+    
+    
+if __name__=='__main__' :
+    path='C:/Users/Public/Documents/PC-Progress/Hydrus-1D 4.xx/Examples/Direct/TEST2A/'
+    A=hydrus_handler(path)
+    A.run_hydrus()
+    (df,textpd)=A.get_profile_dat()
+    print(textpd)
+    
+    

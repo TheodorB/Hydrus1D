@@ -45,10 +45,9 @@ def get_profile_dat(run_path):
 
 # %%
 # write back to Profile.dat
-def write_profile_dat(run_path, df, textpd, **kwargs):
+def write_profile_dat(run_path, **kwargs):
     '''
-    df = df from original Profile_dat
-    textpd    = dict of text from original profile_dat
+    
     par_change = parameter you want to change
     values = values to place in changed parameter (same length)
     **kwargs = {par_change,col_values} - change one column in the dataframe
@@ -57,6 +56,7 @@ def write_profile_dat(run_path, df, textpd, **kwargs):
     write_profile_dat(run_path, df = new_pfor, textpd = hydrus_dict['profile_dat']['textpd'],
                   par_change='h',col_values=-40* np.ones(len(new_pfor)))
     '''
+    (df,textpd)=get_profile_dat(run_path)
     df[['1','Mat', 'Lay']] = df[['1','Mat', 'Lay']].astype(int)
     df[['1','Mat', 'Lay']] = df[['1','Mat', 'Lay']].astype(str) # these columns should be integer strings
     if ('par_change' and 'col_values') in kwargs.keys():
@@ -257,23 +257,26 @@ def get_atmosph_in(run_path):
     df = pd.DataFrame(data=dfarray, columns=mypars[:num_pars])
     return df, text
 # %%
-def write_atmosph_in(run_path, df, mytext, **kwargs):
+def write_atmosph_in(run_path, **kwargs):
     '''
-    df = df from original Profile_dat
-    textpd    = dict of text from original profile_dat
+   
     par_change = parameter you want to change
-    values = values to place in changed parameter (same length)
+    col_values = values to place in changed parameter (same length)
+    col_multiple : float : par_change will be multiplied by it.
     **kwargs = {par_change,col_values} - change one column in the dataframe
 
     example:
-    write_profile_dat(run_path, df = new_pfor, textpd = hydrus_dict['profile_dat']['textpd'],
-                  par_change='h',col_values=-40* np.ones(len(new_pfor)))
+    write_atm_in(run_path,par_change='h',col_values=-40* np.ones(len(new_pfor)))
+    
     '''
+    (df,mytext)=get_atmosph_in(run_path)
 #     df[['1','Mat', 'Lay']] = df[['1','Mat', 'Lay']].astype(int)
 #     df[['1','Mat', 'Lay']] = df[['1','Mat', 'Lay']].astype(str) # these columns should be integer strings
     my_keys = list(mytext.keys())
     if ('par_change' and 'col_values') in kwargs.keys():
         df[kwargs['par_change']] = kwargs['col_values']
+    if ('par_change' and 'col_multiple') in kwargs.keys(): 
+        df[kwargs['par_change']] = df[kwargs['par_change']]*kwargs['col_multiple']
 
     start_row  = 9   # this can change  if "Pcp_File_Version=4" not first row
     n_times = len(df)
@@ -354,3 +357,8 @@ def get_solute_out(run_path, SoluteNum=1):
         dfarray[i,:] = [float(k) for k in text[line]]
     soluteoutdf = pd.DataFrame(data=dfarray, columns=mypars)
     return soluteoutdf
+
+if __name__=='__main__':
+    path='C:/Users/Public/Documents/PC-Progress/Hydrus-1D 4.xx/Examples/Direct/1DRAINAG/'
+    change_par_selectorin(path, 'Ks', 3.5)
+    
