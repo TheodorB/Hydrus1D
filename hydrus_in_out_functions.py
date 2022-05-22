@@ -24,16 +24,16 @@ def get_profile_dat(run_path):
         with open(os.path.join(run_path,'PROFILE.DAT'),'r') as f:
             for i, line in enumerate(f):
                 textpd[i] = line.split()
-    mypars = textpd[4][3:] # parameters for column names  of dataframe
-    n_nodes = int(textpd[4][0]) # this can change.  if "Pcp_File_Version=4" not in first row
-    num_pars = len(textpd[5])
-    mypars = textpd[4][3:] # parameters for column names  of dataframe
-    start_row  = 5
+    mypars = textpd[3][3:] # parameters for column names  of dataframe
+    n_nodes = int(textpd[3][0]) # this can change.  if "Pcp_File_Version=4" not in first row
+    num_pars = len(textpd[4])
+    mypars = textpd[3][3:] # parameters for column names  of dataframe
+    start_row  = 4
     if len(mypars) == len(textpd[start_row]) - 1: # in case of 2 solutes
         extention = ['Conc1', 'Conc2']
         mypars = mypars[:-1]
-        textpd[4] = textpd[4][:-1]
-        textpd[4].extend(extention)
+        textpd[3] = textpd[3][:-1]
+        textpd[3].extend(extention)
         mypars.extend(extention)    
     end_row   = start_row + n_nodes
     dfarray = np.empty(shape=(end_row - start_row, num_pars))
@@ -64,7 +64,7 @@ def write_profile_dat(run_path, **kwargs):
     n_nodes = int(textpd[4][0]) # this can change.  if "Pcp_File_Version=4" not in first row
 #    num_pars = len(textpd[5])
 #    mypars = textpd[4][3:] # parameters for column names  of dataframe
-    start_row  = 5
+    start_row  = 4
     end_row   = start_row + n_nodes
     lines = list(range(start_row, end_row))
     for i,line in enumerate(lines):              # i are serial row numbers in the array
@@ -243,9 +243,17 @@ def get_atmosph_in(run_path):
     with open(os.path.join(run_path, 'ATMOSPH.IN'),'r') as f:
         for i, line in enumerate(f):
             text[i] = line.split()
-
-    start_row  = 9   # this can change  if "Pcp_File_Version=4" not first row
-    myint = 3 # integer of line number   # this can change  if "Pcp_File_Version=4" not first row
+    
+    line=0
+    while text[line][0]!='MaxAL':
+        line+=1
+    myint=line+1 #automatically detects the line number
+    # myint = 3 # integer of line number   # this can change  if "Pcp_File_Version=4" not first row
+    while text[line][0]!='tAtm':
+        line+=1
+    start_row=line+1
+    # start_row  = 9   # this can change  if "Pcp_File_Version=4" not first row
+    
     n_times = int(text[myint][0])
     end_row   = start_row + n_times # - 1
     num_pars = len(text[start_row])
@@ -270,19 +278,40 @@ def write_atmosph_in(run_path, **kwargs):
     
     '''
     (df,mytext)=get_atmosph_in(run_path)
+    if 'df' in kwargs.keys():
+        df=kwargs['df']
+        
+    if 'mytext' in kwargs.keys():
+        mytext=kwargs['mytext']
+    
 #     df[['1','Mat', 'Lay']] = df[['1','Mat', 'Lay']].astype(int)
 #     df[['1','Mat', 'Lay']] = df[['1','Mat', 'Lay']].astype(str) # these columns should be integer strings
-    my_keys = list(mytext.keys())
+    my_keys = list(mytext.keys()) #list of line ids
+    
+    
     if ('par_change' and 'col_values') in kwargs.keys():
         df[kwargs['par_change']] = kwargs['col_values']
     if ('par_change' and 'col_multiple') in kwargs.keys(): 
         df[kwargs['par_change']] = df[kwargs['par_change']]*kwargs['col_multiple']
-
-    start_row  = 9   # this can change  if "Pcp_File_Version=4" not first row
+        
+    line=0
+    while mytext[line][0]!='MaxAL':
+        line+=1
+    myint=line+1 #automatically detects the line number
+    # myint = 3 # integer of line number   # this can change  if "Pcp_File_Version=4" not first row
+    while mytext[line][0]!='tAtm':
+        line+=1
+    start_row=line+1
+    
+    #start_row  = 9   # this can change  if "Pcp_File_Version=4" not first row
+    
+    
     n_times = len(df)
-    mytext[3][0] = str(n_times) # change number of temporal data points (3  if "Pcp_File_Version=4" not first row )
+    print(myint)
+    mytext[myint][0] = str(n_times) # change number of temporal data points (3  if "Pcp_File_Version=4" not first row )
     end_row   = start_row + n_times - 1
-    lines = list(range(start_row, end_row+1))
+    
+    lines = list(range(start_row, end_row+1)) #line numbers
 
     range_of_keys = my_keys[start_row:] # range of last keys df
     start_of_last_part = min([i for i in range_of_keys if 'END' in mytext[i]])
@@ -306,6 +335,7 @@ def write_atmosph_in(run_path, **kwargs):
     str_for_file = '\n'.join('  '.join(elem for elem in line) for i,line in mytext.items())
     with open(os.path.join(run_path,'ATMOSPH.IN'),'w') as f:
         f.write(str_for_file)
+        f.close()
     return  #rewrites profile in profile.dat
 #%%
 def get_solute1_out(run_path):
@@ -359,6 +389,7 @@ def get_solute_out(run_path, SoluteNum=1):
     return soluteoutdf
 
 if __name__=='__main__':
-    path='C:/Users/Public/Documents/PC-Progress/Hydrus-1D 4.xx/Examples/Direct/1DRAINAG/'
-    change_par_selectorin(path, 'Ks', 3.5)
+    path='C:/Users/Public/Documents/PC-Progress/Hydrus-1D 4.xx/Examples/Direct/TEST2C/'
+    (df,text)=get_atmosph_in(path)
+    print(df)
     

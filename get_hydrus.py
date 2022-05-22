@@ -38,9 +38,10 @@ class hydrus_handler:
         with open('{}LEVEL_01.DIR'.format(self.exe_folder),'w') as f:
             f.write(run_path)
        
-
+            f.close()
         os.chdir("{}".format(self.exe_folder))
-        os.startfile("H1D_CALC.EXE")        
+        os.startfile("H1D_CALC.EXE")   
+        
         return  
 
 
@@ -238,10 +239,14 @@ class hydrus_handler:
     
     
 if __name__=='__main__' :
-    path='C:/Users/Public/Documents/PC-Progress/Hydrus-1D 4.xx/Examples/Direct/TEST2A/'
+    path='C:/Users/Public/Documents/PC-Progress/Hydrus-1D 4.xx/Examples/Direct/TEST2B/'
     A=hydrus_handler(path)
     A.run_hydrus()
-    (df,textpd)=A.get_profile_dat()
-    print(textpd)
+    Tlevl=A.get_t_level_out()
+    ta=Tlevl['sum(vRoot)']
+    print(ta[len(ta)-1])
+    
+    
+    
     
     
