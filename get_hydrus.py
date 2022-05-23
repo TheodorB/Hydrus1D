@@ -113,19 +113,35 @@ class hydrus_handler:
             for fi in files:
                 if fi=='T_Level.out':
                     os.rename(os.path.join(run_path,fi),os.path.join(run_path,'T_LEVEL.OUT'))
-        text = dict() # dictionary with text file data by row
+        text_tlevel = dict() # dictionary with text file data by row
         with open(os.path.join(self.run_path, 'T_LEVEL.OUT'),'r') as f:
             for i, line in enumerate(f):
-                text[i] = line.split()
+                text_tlevel[i] = line.split()
+           
+        
         par_row, start_row = 6, 9 # 5,8 on linux compiled fortran codes
-        mypars = text[par_row] # parameters for column names  of dataframe
-        end_row   = [val[0] for val in text.items() if 'end' in val[1]][0]
+        
+        mypars = text_tlevel[par_row] # parameters for column names  of dataframe
+        
+        # k=start_row
+        # while len(text[k])==len(mypars):
+        #     k+=1
+        # end_row=k
+        index=start_row
+        row=text_tlevel[start_row]
+        
+        while 'end' not in row:
+            index+=1
+            row=text_tlevel[index]
+        end_row=index
+            
+        # end_row   = [val[0] for val in text_tlevel.items() if 'end' in val[1]][0]
 
         dfarray = np.empty(shape=(end_row - start_row, len(mypars)))
         lines = list(range(start_row, end_row))
 
         for i,line in enumerate(lines):              # i are serial row numbers in the array
-            dfarray[i,:] = [float(k) for k in text[line]]
+            dfarray[i,:] = [float(k) for k in text_tlevel[line]]
         levdf = pd.DataFrame(data=dfarray, columns=mypars)
         return levdf
 

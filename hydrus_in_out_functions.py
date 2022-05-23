@@ -240,9 +240,10 @@ def get_atmosph_in(run_path):
     get text dict and DataFrame of profile
     '''
     text = dict() # dictionary with text file data by row , textpd =text of profile.dat
-    with open(os.path.join(run_path, 'ATMOSPH.IN'),'r') as f:
+    with open(run_path+ 'ATMOSPH.IN','r') as f:
         for i, line in enumerate(f):
             text[i] = line.split()
+    
     
     line=0
     while text[line][0]!='MaxAL':
@@ -307,7 +308,7 @@ def write_atmosph_in(run_path, **kwargs):
     
     
     n_times = len(df)
-    print(myint)
+    
     mytext[myint][0] = str(n_times) # change number of temporal data points (3  if "Pcp_File_Version=4" not first row )
     end_row   = start_row + n_times - 1
     
@@ -333,9 +334,9 @@ def write_atmosph_in(run_path, **kwargs):
     mytext[list(mytext.keys())[-1]+1] = last_part_dict[0]
     
     str_for_file = '\n'.join('  '.join(elem for elem in line) for i,line in mytext.items())
-    with open(os.path.join(run_path,'ATMOSPH.IN'),'w') as f:
+    with open(run_path+'ATMOSPH.IN','w') as f:
         f.write(str_for_file)
-        f.close()
+   
     return  #rewrites profile in profile.dat
 #%%
 def get_solute1_out(run_path):
@@ -389,7 +390,8 @@ def get_solute_out(run_path, SoluteNum=1):
     return soluteoutdf
 
 if __name__=='__main__':
-    path='C:/Users/Public/Documents/PC-Progress/Hydrus-1D 4.xx/Examples/Direct/TEST2C/'
-    (df,text)=get_atmosph_in(path)
-    print(df)
+    path='C:/Users/Public/Documents/PC-Progress/Hydrus-1D 4.xx/Examples/Direct/TEST2f/'
+    write_atmosph_in(path, par_change='Prec',col_multiple=2)
+    print(get_atmosph_in(path)[0])
+    
     
