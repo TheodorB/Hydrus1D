@@ -24,16 +24,16 @@ def get_profile_dat(run_path):
         with open(os.path.join(run_path,'PROFILE.DAT'),'r') as f:
             for i, line in enumerate(f):
                 textpd[i] = line.split()
-    mypars = textpd[4][3:] # parameters for column names  of dataframe
-    n_nodes = int(textpd[4][0]) # this can change.  if "Pcp_File_Version=4" not in first row
-    num_pars = len(textpd[5])
-    mypars = textpd[4][3:] # parameters for column names  of dataframe
-    start_row  = 5
+    mypars = textpd[3][3:] # parameters for column names  of dataframe
+    n_nodes = int(textpd[3][0]) # this can change.  if "Pcp_File_Version=4" not in first row
+    num_pars = len(textpd[4])
+    mypars = textpd[3][3:] # parameters for column names  of dataframe
+    start_row  = 4
     if len(mypars) == len(textpd[start_row]) - 1: # in case of 2 solutes
         extention = ['Conc1', 'Conc2']
         mypars = mypars[:-1]
-        textpd[4] = textpd[4][:-1]
-        textpd[4].extend(extention)
+        textpd[3] = textpd[3][:-1]
+        textpd[3].extend(extention)
         mypars.extend(extention)    
     end_row   = start_row + n_nodes
     dfarray = np.empty(shape=(end_row - start_row, num_pars))
@@ -45,10 +45,9 @@ def get_profile_dat(run_path):
 
 # %%
 # write back to Profile.dat
-def write_profile_dat(run_path, df, textpd, **kwargs):
+def write_profile_dat(run_path, **kwargs):
     '''
-    df = df from original Profile_dat
-    textpd    = dict of text from original profile_dat
+    
     par_change = parameter you want to change
     values = values to place in changed parameter (same length)
     **kwargs = {par_change,col_values} - change one column in the dataframe
@@ -57,6 +56,7 @@ def write_profile_dat(run_path, df, textpd, **kwargs):
     write_profile_dat(run_path, df = new_pfor, textpd = hydrus_dict['profile_dat']['textpd'],
                   par_change='h',col_values=-40* np.ones(len(new_pfor)))
     '''
+    (df,textpd)=get_profile_dat(run_path)
     df[['1','Mat', 'Lay']] = df[['1','Mat', 'Lay']].astype(int)
     df[['1','Mat', 'Lay']] = df[['1','Mat', 'Lay']].astype(str) # these columns should be integer strings
     if ('par_change' and 'col_values') in kwargs.keys():
@@ -64,7 +64,7 @@ def write_profile_dat(run_path, df, textpd, **kwargs):
     n_nodes = int(textpd[4][0]) # this can change.  if "Pcp_File_Version=4" not in first row
 #    num_pars = len(textpd[5])
 #    mypars = textpd[4][3:] # parameters for column names  of dataframe
-    start_row  = 5
+    start_row  = 4
     end_row   = start_row + n_nodes
     lines = list(range(start_row, end_row))
     for i,line in enumerate(lines):              # i are serial row numbers in the array
@@ -240,12 +240,21 @@ def get_atmosph_in(run_path):
     get text dict and DataFrame of profile
     '''
     text = dict() # dictionary with text file data by row , textpd =text of profile.dat
-    with open(os.path.join(run_path, 'ATMOSPH.IN'),'r') as f:
+    with open(run_path+ 'ATMOSPH.IN','r') as f:
         for i, line in enumerate(f):
             text[i] = line.split()
-
-    start_row  = 9   # this can change  if "Pcp_File_Version=4" not first row
-    myint = 3 # integer of line number   # this can change  if "Pcp_File_Version=4" not first row
+    
+    
+    line=0
+    while text[line][0]!='MaxAL':
+        line+=1
+    myint=line+1 #automatically detects the line number
+    # myint = 3 # integer of line number   # this can change  if "Pcp_File_Version=4" not first row
+    while text[line][0]!='tAtm':
+        line+=1
+    start_row=line+1
+    # start_row  = 9   # this can change  if "Pcp_File_Version=4" not first row
+    
     n_times = int(text[myint][0])
     end_row   = start_row + n_times # - 1
     num_pars = len(text[start_row])
@@ -257,29 +266,53 @@ def get_atmosph_in(run_path):
     df = pd.DataFrame(data=dfarray, columns=mypars[:num_pars])
     return df, text
 # %%
-def write_atmosph_in(run_path, df, mytext, **kwargs):
+def write_atmosph_in(run_path, **kwargs):
     '''
-    df = df from original Profile_dat
-    textpd    = dict of text from original profile_dat
+   
     par_change = parameter you want to change
-    values = values to place in changed parameter (same length)
+    col_values = values to place in changed parameter (same length)
+    col_multiple : float : par_change will be multiplied by it.
     **kwargs = {par_change,col_values} - change one column in the dataframe
 
     example:
-    write_profile_dat(run_path, df = new_pfor, textpd = hydrus_dict['profile_dat']['textpd'],
-                  par_change='h',col_values=-40* np.ones(len(new_pfor)))
+    write_atm_in(run_path,par_change='h',col_values=-40* np.ones(len(new_pfor)))
+    
     '''
+    (df,mytext)=get_atmosph_in(run_path)
+    if 'df' in kwargs.keys():
+        df=kwargs['df']
+        
+    if 'mytext' in kwargs.keys():
+        mytext=kwargs['mytext']
+    
 #     df[['1','Mat', 'Lay']] = df[['1','Mat', 'Lay']].astype(int)
 #     df[['1','Mat', 'Lay']] = df[['1','Mat', 'Lay']].astype(str) # these columns should be integer strings
-    my_keys = list(mytext.keys())
+    my_keys = list(mytext.keys()) #list of line ids
+    
+    
     if ('par_change' and 'col_values') in kwargs.keys():
         df[kwargs['par_change']] = kwargs['col_values']
-
-    start_row  = 9   # this can change  if "Pcp_File_Version=4" not first row
+    if ('par_change' and 'col_multiple') in kwargs.keys(): 
+        df[kwargs['par_change']] = df[kwargs['par_change']]*kwargs['col_multiple']
+        
+    line=0
+    while mytext[line][0]!='MaxAL':
+        line+=1
+    myint=line+1 #automatically detects the line number
+    # myint = 3 # integer of line number   # this can change  if "Pcp_File_Version=4" not first row
+    while mytext[line][0]!='tAtm':
+        line+=1
+    start_row=line+1
+    
+    #start_row  = 9   # this can change  if "Pcp_File_Version=4" not first row
+    
+    
     n_times = len(df)
-    mytext[3][0] = str(n_times) # change number of temporal data points (3  if "Pcp_File_Version=4" not first row )
+    
+    mytext[myint][0] = str(n_times) # change number of temporal data points (3  if "Pcp_File_Version=4" not first row )
     end_row   = start_row + n_times - 1
-    lines = list(range(start_row, end_row+1))
+    
+    lines = list(range(start_row, end_row+1)) #line numbers
 
     range_of_keys = my_keys[start_row:] # range of last keys df
     start_of_last_part = min([i for i in range_of_keys if 'END' in mytext[i]])
@@ -301,8 +334,9 @@ def write_atmosph_in(run_path, df, mytext, **kwargs):
     mytext[list(mytext.keys())[-1]+1] = last_part_dict[0]
     
     str_for_file = '\n'.join('  '.join(elem for elem in line) for i,line in mytext.items())
-    with open(os.path.join(run_path,'ATMOSPH.IN'),'w') as f:
+    with open(run_path+'ATMOSPH.IN','w') as f:
         f.write(str_for_file)
+   
     return  #rewrites profile in profile.dat
 #%%
 def get_solute1_out(run_path):
@@ -354,3 +388,10 @@ def get_solute_out(run_path, SoluteNum=1):
         dfarray[i,:] = [float(k) for k in text[line]]
     soluteoutdf = pd.DataFrame(data=dfarray, columns=mypars)
     return soluteoutdf
+
+if __name__=='__main__':
+    path='C:/Users/Public/Documents/PC-Progress/Hydrus-1D 4.xx/Examples/Direct/TEST2f/'
+    write_atmosph_in(path, par_change='Prec',col_multiple=2)
+    print(get_atmosph_in(path)[0])
+    
+    
